@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "next-themes";
+import { useCriticalAlerts } from "@/hooks/useCriticalAlerts";
+import { NotificationPermissionBanner } from "@/components/NotificationPermission";
 
 // Pages
 import Login from "./pages/Login";
@@ -63,6 +65,12 @@ function DashboardRedirect() {
   }
 }
 
+// Critical alerts listener component
+function CriticalAlertsListener() {
+  useCriticalAlerts();
+  return null;
+}
+
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
 
@@ -102,6 +110,8 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <CriticalAlertsListener />
+            <NotificationPermissionBanner />
             <AppRoutes />
           </BrowserRouter>
         </TooltipProvider>
