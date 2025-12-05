@@ -44,17 +44,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    // First try to get from Supabase staff table
+    const normalizedEmail = email.toLowerCase().trim();
+    const passwordHash = store.hashPassword(password);
+    
+    // Try to authenticate from Supabase staff table
     try {
       const { data: staffData, error } = await supabase
         .from('staff')
         .select('*')
-        .eq('email', email)
+        .ilike('email', normalizedEmail)
         .single();
       
       if (!error && staffData) {
-        // For Supabase, we'd need to verify password on server
-        // For now, just check if staff exists
+        // Verify password hash - must match exactly
+        if (!staffData.password_hash || staffData.password_hash !== passwordHash) {
+          throw new Error('Invalid password. Please try again.');
+        }
+        
         const staff: Staff = {
           id: staffData.id,
           name: staffData.name,
@@ -69,31 +75,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           updated_at: staffData.updated_at
         };
         
-        const authToken = `token-${Date.now()}`;
+        const authToken = `token-${Date.now()}-${staffData.id}`;
         setToken(authToken);
         setUser(staff);
         localStorage.setItem('auth_token', authToken);
         localStorage.setItem('auth_user', JSON.stringify(staff));
+        console.log('Login successful via Supabase for:', staff.email);
         return;
       }
-    } catch {
-      console.log('Staff table not available, using local storage');
+      
+      if (error && error.code === 'PGRST116') {
+        // No user found in Supabase
+        throw new Error('Account not found. Please contact admin to create your account.');
+      }
+      
+      if (error) {
+        console.log('Supabase error:', error);
+        throw new Error('Database error. Please try again.');
+      }
+    } catch (e: any) {
+      // Re-throw auth errors
+      if (e.message.includes('Invalid password') || 
+          e.message.includes('Account not found') ||
+          e.message.includes('Database error')) {
+        throw e;
+      }
+      console.log('Supabase connection failed, falling back to localStorage:', e.message);
     }
     
-    // Fall back to local storage staff with password verification
+    // Fall back to local storage only if Supabase is unavailable
     const authenticatedStaff = store.authenticateStaff(email, password);
     if (authenticatedStaff) {
-      const authToken = `token-${Date.now()}`;
+      const authToken = `token-${Date.now()}-local`;
       setToken(authToken);
-      // Don't include password_hash in the stored user
       const { password_hash, ...safeStaff } = authenticatedStaff;
       setUser(safeStaff as Staff);
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('auth_user', JSON.stringify(safeStaff));
+      console.log('Login successful via localStorage for:', safeStaff.email);
       return;
     }
     
-    // Check if email exists but password is wrong
     const staffExists = store.getStaffByEmail(email);
     if (staffExists) {
       throw new Error('Invalid password. Please try again.');

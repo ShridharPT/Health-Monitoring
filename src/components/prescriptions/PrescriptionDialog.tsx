@@ -146,6 +146,12 @@ export function PrescriptionDialog({ patientId, doctorId, open, onClose, editPre
         });
         toast.success('Prescription updated successfully');
       } else {
+        console.log('Creating prescription with:', {
+          patient_id: patientId,
+          doctor_id: doctorId,
+          medicines: selectedMedicines.length,
+          priority
+        });
         await createPrescription.mutateAsync({
           patient_id: patientId,
           doctor_id: doctorId,
@@ -160,8 +166,10 @@ export function PrescriptionDialog({ patientId, doctorId, open, onClose, editPre
           : 'Prescription created successfully');
       }
       onClose();
-    } catch (error) {
-      toast.error(isEditMode ? 'Failed to update prescription' : 'Failed to create prescription');
+    } catch (error: any) {
+      console.error('Prescription error:', error);
+      const errorMsg = error?.message || (isEditMode ? 'Failed to update prescription' : 'Failed to create prescription');
+      toast.error(errorMsg);
     }
   };
 

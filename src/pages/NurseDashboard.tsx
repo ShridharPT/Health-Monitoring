@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMyAssignments } from '@/hooks/useAssignments';
 import { usePatients } from '@/hooks/usePatients';
 import { useAllLatestVitals } from '@/hooks/useVitals';
-import { useNursePrescriptionInbox, useUpdatePrescriptionStatus } from '@/hooks/usePrescriptions';
+import { useNursePrescriptionInbox, useUpdatePrescriptionStatus, useRealtimePrescriptions } from '@/hooks/usePrescriptions';
 import { useRiskEvents } from '@/hooks/useRiskEvents';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,11 +23,20 @@ export default function NurseDashboard() {
   const { data: assignments } = useMyAssignments(user?.id);
   const { data: patients } = usePatients({ staffId: user?.id, role: user?.role as 'admin' | 'doctor' | 'nurse' });
   const { data: latestVitals } = useAllLatestVitals();
-  const { data: prescriptionInbox } = useNursePrescriptionInbox(user?.id);
+  const { data: prescriptionInbox, isLoading: loadingInbox, error: inboxError } = useNursePrescriptionInbox(user?.id);
   const { data: riskEvents } = useRiskEvents(20);
   const updateStatus = useUpdatePrescriptionStatus();
   const [showChat, setShowChat] = useState(false);
   const [chatPartnerId, setChatPartnerId] = useState<string | null>(null);
+
+  // Enable real-time prescription updates
+  useRealtimePrescriptions(user?.id);
+  
+  // Debug logging
+  console.log('Nurse Dashboard - User ID:', user?.id);
+  console.log('Nurse Dashboard - Assignments:', assignments);
+  console.log('Nurse Dashboard - Prescription Inbox:', prescriptionInbox);
+  console.log('Nurse Dashboard - Inbox Loading:', loadingInbox, 'Error:', inboxError);
 
   // Use patients from usePatients hook (filtered by assignment)
   const myPatients = patients || [];

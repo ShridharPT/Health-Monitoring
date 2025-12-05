@@ -7,6 +7,17 @@ export const authRouter = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'vitalguard-secret-key-change-in-production';
 
+// Simple password hashing (must match frontend localStore.ts)
+function hashPassword(password: string): string {
+  let hash = 0;
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return `hash_${Math.abs(hash).toString(36)}`;
+}
+
 // POST /auth/login - Login
 authRouter.post('/login', async (req, res) => {
   try {
@@ -22,8 +33,15 @@ authRouter.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    // For demo, accept any password or check hash
-    const isValid = staff.password_hash === '$2b$10$demo' || await bcrypt.compare(password, staff.password_hash);
+    // Check password hash - support both bcrypt and simple hash formats
+    let isValid = false;
+    if (staff.password_hash.startsWith('hash_')) {
+      // Simple hash format used by frontend
+      isValid = staff.password_hash === hashPassword(password);
+    } else if (staff.password_hash.startsWith('$2b$')) {
+      // bcrypt format
+      isValid = await bcrypt.compare(password, staff.password_hash);
+    }
     
     if (!isValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -50,7 +68,8 @@ authRouter.post('/register', async (req, res) => {
   try {
     const { name, email, password, role, contact, department, specialization } = req.body;
     
-    const password_hash = await bcrypt.hash(password, 10);
+    // Use simple hash format for consistency with frontend
+    const password_hash = hashPassword(password);
     
     const { data, error } = await supabase
       .from('staff')
@@ -131,12 +150,19 @@ authRouter.put('/password', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    const isValid = staff.password_hash === '$2b$10$demo' || await bcrypt.compare(currentPassword, staff.password_hash);
+    // Check current password - support both hash formats
+    let isValid = false;
+    if (staff.password_hash.startsWith('hash_')) {
+      isValid = staff.password_hash === hashPassword(currentPassword);
+    } else if (staff.password_hash.startsWith('$2b$')) {
+      isValid = await bcrypt.compare(currentPassword, staff.password_hash);
+    }
     if (!isValid) {
       return res.status(400).json({ error: 'Current password is incorrect' });
     }
     
-    const password_hash = await bcrypt.hash(newPassword, 10);
+    // Use simple hash format for consistency with frontend
+    const password_hash = hashPassword(newPassword);
     
     await supabase
       .from('staff')

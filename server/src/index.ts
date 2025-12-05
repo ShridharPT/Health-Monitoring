@@ -32,6 +32,10 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'vitalguard-api' });
+});
+
 // Routes
 app.use('/api/auth', authRouter);
 app.use('/api/vitals', vitalsRouter);

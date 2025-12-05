@@ -258,40 +258,152 @@ export default function PatientDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Charts */}
           <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-lg font-semibold text-foreground">Vital Trends</h2>
-            {vitals && vitals.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <VitalsChart
-                  vitals={vitals}
-                  type="heart_rate"
-                  title="Heart Rate"
-                  color="hsl(var(--heart-rate))"
-                />
-                <VitalsChart
-                  vitals={vitals}
-                  type="spo2"
-                  title="SpO₂"
-                  color="hsl(var(--spo2))"
-                />
-                <VitalsChart
-                  vitals={vitals}
-                  type="resp_rate"
-                  title="Respiratory Rate"
-                  color="hsl(var(--resp-rate))"
-                />
-                <VitalsChart
-                  vitals={vitals}
-                  type="temperature"
-                  title="Temperature"
-                  color="hsl(var(--temperature))"
-                />
+            <Tabs defaultValue="trends">
+              <div className="flex items-center justify-between">
+                <TabsList>
+                  <TabsTrigger value="trends">Vital Trends</TabsTrigger>
+                  <TabsTrigger value="forecast">Future Predictions</TabsTrigger>
+                </TabsList>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleGenerateForecast}
+                    disabled={generateForecast.isPending || !vitals || vitals.length < 2}
+                  >
+                    <RefreshCw className={cn("w-4 h-4 mr-2", generateForecast.isPending && "animate-spin")} />
+                    Generate Forecast
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleDownloadReport}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Report
+                  </Button>
+                </div>
               </div>
-            ) : (
-              <div className="vital-card flex flex-col items-center justify-center py-12">
-                <Activity className="w-8 h-8 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Record vitals to see trends</p>
-              </div>
-            )}
+              
+              <TabsContent value="trends" className="mt-4">
+                {vitals && vitals.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <VitalsChart
+                      vitals={vitals}
+                      type="heart_rate"
+                      title="Heart Rate"
+                      color="hsl(var(--heart-rate))"
+                    />
+                    <VitalsChart
+                      vitals={vitals}
+                      type="spo2"
+                      title="SpO₂"
+                      color="hsl(var(--spo2))"
+                    />
+                    <VitalsChart
+                      vitals={vitals}
+                      type="resp_rate"
+                      title="Respiratory Rate"
+                      color="hsl(var(--resp-rate))"
+                    />
+                    <VitalsChart
+                      vitals={vitals}
+                      type="temperature"
+                      title="Temperature"
+                      color="hsl(var(--temperature))"
+                    />
+                  </div>
+                ) : (
+                  <div className="vital-card flex flex-col items-center justify-center py-12">
+                    <Activity className="w-8 h-8 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">Record vitals to see trends</p>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="forecast" className="mt-4">
+                {forecast ? (
+                  <div className="space-y-4">
+                    {/* Forecast Summary */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base">Forecast Summary</CardTitle>
+                          <Badge variant={
+                            forecast.risk_projection === 'critical' ? 'destructive' :
+                            forecast.risk_projection === 'declining' ? 'secondary' :
+                            forecast.risk_projection === 'improving' ? 'default' : 'outline'
+                          }>
+                            <TrendingUp className="w-3 h-3 mr-1" />
+                            {forecast.risk_projection || 'stable'}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          {forecast.forecast_json?.summary || 'No summary available'}
+                        </p>
+                        <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                          <span>Horizon: {forecast.horizon_minutes} min</span>
+                          <span>Confidence: {((forecast.confidence || 0.75) * 100).toFixed(0)}%</span>
+                          <span>Model: {forecast.model_version}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Forecast Charts */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <ForecastChart
+                        patientId={patient.id}
+                        vitalType="heart_rate"
+                        title="Heart Rate"
+                        color="hsl(var(--heart-rate))"
+                        currentValue={latestVitals?.heart_rate}
+                        dangerThreshold={{ min: 50, max: 120 }}
+                      />
+                      <ForecastChart
+                        patientId={patient.id}
+                        vitalType="spo2"
+                        title="SpO₂"
+                        color="hsl(var(--spo2))"
+                        currentValue={latestVitals?.spo2}
+                        dangerThreshold={{ min: 92 }}
+                      />
+                      <ForecastChart
+                        patientId={patient.id}
+                        vitalType="resp_rate"
+                        title="Respiratory Rate"
+                        color="hsl(var(--resp-rate))"
+                        currentValue={latestVitals?.resp_rate}
+                        dangerThreshold={{ min: 10, max: 25 }}
+                      />
+                      <ForecastChart
+                        patientId={patient.id}
+                        vitalType="temperature"
+                        title="Temperature"
+                        color="hsl(var(--temperature))"
+                        currentValue={latestVitals?.temperature}
+                        dangerThreshold={{ min: 36, max: 38 }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="vital-card flex flex-col items-center justify-center py-12">
+                    <TrendingUp className="w-8 h-8 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground mb-4">No forecast available yet</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleGenerateForecast}
+                      disabled={generateForecast.isPending || !vitals || vitals.length < 2}
+                    >
+                      <RefreshCw className={cn("w-4 h-4 mr-2", generateForecast.isPending && "animate-spin")} />
+                      Generate Forecast
+                    </Button>
+                    {(!vitals || vitals.length < 2) && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Need at least 2 vitals records to generate forecast
+                      </p>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Sidebar */}

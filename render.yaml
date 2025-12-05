@@ -1,0 +1,52 @@
+# Render Blueprint for VitalGuard AI
+# This file defines the infrastructure for deploying on Render
+
+services:
+  # Backend API Server
+  - type: web
+    name: vitalguard-api
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+
+  # Frontend Static Site
+  - type: web
+    name: vitalguard-frontend
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: vitalguard-api
+          property: host
+      - key: VITE_WS_URL
+        sync: false

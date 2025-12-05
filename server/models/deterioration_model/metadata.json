@@ -1,0 +1,17 @@
+{
+  "model_version": "v2.0-random-forest",
+  "roc_auc": 0.8682817331945016,
+  "thresholds": {
+    "low_risk": 0.2,
+    "moderate_risk": 0.775570511178709,
+    "high_risk": 0.9306846134144507
+  },
+  "feature_names": [
+    "heart_rate",
+    "spo2",
+    "resp_rate",
+    "systolic_bp",
+    "diastolic_bp",
+    "temperature"
+  ]
+}

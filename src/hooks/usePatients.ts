@@ -17,6 +17,34 @@ export function usePatients(options?: PatientFilterOptions) {
     queryKey: ['patients', staffId, role],
     queryFn: async () => {
       let patients: Patient[] = [];
+      let assignedPatientIds: Set<string> = new Set();
+      
+      // If not admin, first get assignments to filter patients
+      if (staffId && role && role !== 'admin') {
+        try {
+          const { data: assignments, error: assignError } = await supabase
+            .from('assignments')
+            .select('patient_id')
+            .or(`doctor_id.eq.${staffId},nurse_id.eq.${staffId}`)
+            .eq('status', 'active');
+          
+          if (!assignError && assignments && assignments.length > 0) {
+            assignedPatientIds = new Set(assignments.map(a => a.patient_id));
+          } else {
+            // Fallback to localStorage assignments
+            const localAssignments = store.getAssignments().filter(a => 
+              (a.doctor_id === staffId || a.nurse_id === staffId) && a.status === 'active'
+            );
+            assignedPatientIds = new Set(localAssignments.map(a => a.patient_id));
+          }
+        } catch {
+          // Fallback to localStorage assignments
+          const localAssignments = store.getAssignments().filter(a => 
+            (a.doctor_id === staffId || a.nurse_id === staffId) && a.status === 'active'
+          );
+          assignedPatientIds = new Set(localAssignments.map(a => a.patient_id));
+        }
+      }
       
       try {
         const { data, error } = await supabase
@@ -36,12 +64,11 @@ export function usePatients(options?: PatientFilterOptions) {
       }
       
       // Filter by assignments if not admin
-      if (staffId && role && role !== 'admin') {
-        const assignments = store.getAssignments().filter(a => 
-          (a.doctor_id === staffId || a.nurse_id === staffId) && a.status === 'active'
-        );
-        const assignedPatientIds = new Set(assignments.map(a => a.patient_id));
+      if (staffId && role && role !== 'admin' && assignedPatientIds.size > 0) {
         patients = patients.filter(p => assignedPatientIds.has(p.id));
+      } else if (staffId && role && role !== 'admin') {
+        // No assignments found, return empty
+        patients = [];
       }
       
       return patients;

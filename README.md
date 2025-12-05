@@ -103,9 +103,9 @@ npm run dev
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@hospital.com | any |
-| Doctor | sarah.johnson@hospital.com | any |
-| Nurse | rachel.adams@hospital.com | any |
+| Admin | admin@hospital.com | admin123 |
+| Doctor | doctor@hospital.com | doctor123 |
+| Nurse | nurse@hospital.com | nurse123 |
 
 ## API Endpoints
 
@@ -144,6 +144,46 @@ npm run dev
 - `/ws/vitals` - Real-time vitals stream
 - `/ws/notifications` - Immediate alerts
 - `/ws/chat` - Doctor-nurse messaging
+
+## Deployment on Render
+
+### Option 1: Using render.yaml (Blueprint)
+
+1. Push your code to GitHub
+2. Go to [Render Dashboard](https://dashboard.render.com)
+3. Click "New" → "Blueprint"
+4. Connect your GitHub repository
+5. Render will detect `render.yaml` and create both services
+6. Add environment variables in Render dashboard:
+
+**Backend (vitalguard-api):**
+- `SUPABASE_URL`: Your Supabase project URL
+- `SUPABASE_SERVICE_KEY`: Your Supabase service role key
+- `JWT_SECRET`: Auto-generated or set your own
+
+**Frontend (vitalguard-frontend):**
+- `VITE_SUPABASE_URL`: Your Supabase project URL
+- `VITE_SUPABASE_PUBLISHABLE_KEY`: Your Supabase anon key
+- `VITE_API_URL`: Your backend URL (e.g., https://vitalguard-api.onrender.com/api)
+- `VITE_WS_URL`: Your backend WebSocket URL (e.g., wss://vitalguard-api.onrender.com)
+
+### Option 2: Manual Deployment
+
+**Deploy Backend:**
+1. Create a new Web Service on Render
+2. Connect your GitHub repo
+3. Set Root Directory: `server`
+4. Build Command: `npm install && npm run build`
+5. Start Command: `npm start`
+6. Add environment variables
+
+**Deploy Frontend:**
+1. Create a new Static Site on Render
+2. Connect your GitHub repo
+3. Build Command: `npm install && npm run build`
+4. Publish Directory: `dist`
+5. Add environment variables
+6. Add rewrite rule: `/*` → `/index.html`
 
 ## Docker Deployment
 

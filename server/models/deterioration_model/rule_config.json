@@ -1,0 +1,112 @@
+{
+  "model_type": "rule_based_ml",
+  "model_version": "v2.0-random-forest",
+  "trained_model": "Random Forest",
+  "roc_auc": 0.8682817331945016,
+  "thresholds": {
+    "heart_rate": {
+      "normal_min": 62.36,
+      "normal_max": 128.76199999999952,
+      "warning_min": 77.01,
+      "warning_max": 110.78,
+      "critical_min": 66.24,
+      "critical_max": 120.26,
+      "mean_normal": 88.98047478097638,
+      "mean_deterioration": 94.11649962371067
+    },
+    "spo2": {
+      "normal_min": 78.58,
+      "warning_min": 91.95,
+      "critical_min": 87.26,
+      "mean_normal": 93.61265876840797,
+      "mean_deterioration": 91.61959405020143
+    },
+    "resp_rate": {
+      "normal_min": 10.74,
+      "normal_max": 33.5,
+      "warning_min": 16.398,
+      "warning_max": 27.07,
+      "critical_min": 12.77,
+      "critical_max": 31.49239999999998,
+      "mean_normal": 20.07907902559471,
+      "mean_deterioration": 21.89486697064943
+    },
+    "systolic_bp": {
+      "normal_min": 76.92,
+      "normal_max": 139.14,
+      "warning_min": 91.0,
+      "warning_max": 125.23,
+      "critical_min": 81.7076,
+      "critical_max": 135.99239999999998,
+      "mean_normal": 113.74746091981066,
+      "mean_deterioration": 107.29151356855107
+    },
+    "diastolic_bp": {
+      "normal_min": 49.38,
+      "normal_max": 86.24,
+      "warning_min": 57.13,
+      "warning_max": 79.15,
+      "critical_min": 50.28,
+      "critical_max": 86.07,
+      "mean_normal": 70.64648438942817,
+      "mean_deterioration": 68.2425127274337
+    },
+    "temperature": {
+      "normal_min": 36.37,
+      "normal_max": 37.73,
+      "warning_min": 36.61,
+      "warning_max": 37.44,
+      "critical_min": 36.34,
+      "critical_max": 37.72,
+      "mean_normal": 36.965502419822045,
+      "mean_deterioration": 37.02211518880871
+    }
+  },
+  "feature_weights": {
+    "heart_rate": 0.15604821830418183,
+    "spo2": 0.32130850810055606,
+    "resp_rate": 0.16701308910137352,
+    "systolic_bp": 0.1978815472314399,
+    "diastolic_bp": 0.09547466434501994,
+    "temperature": 0.06227397291742863
+  },
+  "risk_thresholds": {
+    "low_risk": 0.2,
+    "moderate_risk": 0.775570511178709,
+    "high_risk": 0.9306846134144507
+  },
+  "feature_mapping": {
+    "heart_rate": "heart_rate",
+    "spo2_pct": "spo2",
+    "respiratory_rate": "resp_rate",
+    "systolic_bp": "systolic_bp",
+    "diastolic_bp": "diastolic_bp",
+    "temperature_c": "temperature"
+  },
+  "scaler": {
+    "mean": [
+      89.2720197910785,
+      93.50409226065833,
+      20.17689181912842,
+      113.38085165065381,
+      70.5083282280182,
+      36.968946011271676
+    ],
+    "scale": [
+      21.149824045809122,
+      5.955823578240187,
+      6.850359030097744,
+      17.108189970563803,
+      10.671505898505636,
+      0.45186629943616263
+    ],
+    "feature_names": [
+      "heart_rate",
+      "spo2_pct",
+      "respiratory_rate",
+      "systolic_bp",
+      "diastolic_bp",
+      "temperature_c"
+    ]
+  }
+}
